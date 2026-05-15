@@ -89,23 +89,26 @@ export default function HomePage() {
       })
 
       // ─── 4. Card Stacking ───
-      const cardElements = document.querySelectorAll(".stack-card")
-      cardElements.forEach((card, i) => {
-        if (i === cardElements.length - 1) return
+      const cards = document.querySelectorAll(".stack-card")
+      if (cards.length > 0) {
         ScrollTrigger.create({
-          trigger: card,
-          start: "top 5%",
-          endTrigger: ".stack-section",
+          trigger: ".stack-section",
+          start: "top 10%",
           end: "bottom bottom",
-          scrub: true,
-          animation: gsap.to(card, {
-            scale: 0.98,
-            opacity: 0.7,
-            y: -10,
-            ease: "none"
-          })
+          onUpdate: (self) => {
+            const progress = self.progress
+            cards.forEach((card, i) => {
+              const cardProgress = Math.max(0, Math.min(1, (progress - i * 0.25) / 0.25))
+              const s = 1 - cardProgress * 0.04
+              const o = 1 - cardProgress * 0.35
+              const y = -cardProgress * 8
+              card.setAttribute("style",
+                `z-index: ${10 - i}; transform: scale(${s}) translateY(${y}px); opacity: ${o}; position: sticky; top: ${8 + i * 6}vh;`
+              )
+            })
+          }
         })
-      })
+      }
 
     }, containerRef)
 
@@ -230,13 +233,13 @@ export default function HomePage() {
       </section>
 
       {/* ─── Refined Stacking Cards (Toned Down) ─── */}
-      <section className="stack-section relative px-6 pb-[40vh] z-10">
-        <div className="max-w-6xl mx-auto flex flex-col gap-[20vh]">
+      <section className="stack-section relative px-6 pb-[40vh] z-10" style={{ perspective: "1000px" }}>
+        <div className="max-w-6xl mx-auto">
           {subjects.map((sub, i) => (
             <div 
               key={i} 
-              className={`stack-card sticky top-[12vh] w-full h-[70vh] bg-surface-card rounded-[56px] border-2 ${sub.border} p-10 md:p-20 flex flex-col md:flex-row gap-16 items-center overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.6)]`}
-              style={{ zIndex: i + 10 }}
+              className={`stack-card w-full h-[70vh] bg-surface-card rounded-[56px] border-2 ${sub.border} p-10 md:p-20 flex flex-col md:flex-row gap-16 items-center overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.6)]`}
+              style={{ zIndex: 10 - i, position: "sticky", top: `${8 + i * 6}vh` }}
             >
               {/* Subtle Ambient Glow */}
               <div className={`absolute -top-40 -right-40 w-96 h-96 blur-[120px] opacity-20 pointer-events-none rounded-full ${sub.bg}`} />

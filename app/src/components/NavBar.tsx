@@ -40,7 +40,7 @@ export default function NavBar() {
     setMenuOpen(false)
   }
 
-  const isLanding = pathname === "/"
+
 
   return (
     <nav className="sticky top-0 z-50 bg-ink border-b border-primary/5">
@@ -61,14 +61,6 @@ export default function NavBar() {
           >
             {user ? "Dashboard" : "Home"}
           </Link>
-          {isLanding && (
-            <a
-              href="#features"
-              className="text-sm font-semibold text-canvas-soft/70 hover:text-primary transition-colors"
-            >
-              Features
-            </a>
-          )}
           {user && (
             <>
               <Link
@@ -78,10 +70,10 @@ export default function NavBar() {
                 Videos
               </Link>
               <Link
-                href="/battle"
+                href="/games"
                 className="text-sm font-semibold text-canvas-soft/70 hover:text-primary transition-colors"
               >
-                Battle
+                Games
               </Link>
               <Link
                 href="/notes"
@@ -207,18 +199,13 @@ export default function NavBar() {
             >
               {user ? "Dashboard" : "Home"}
             </NavDrawerLink>
-            {isLanding && (
-              <NavDrawerLink href="#features" active={false}>
-                Features
-              </NavDrawerLink>
-            )}
-            {user && (
+          {user && (
               <>
                 <NavDrawerLink href="/videos" active={pathname.startsWith("/videos") || pathname.startsWith("/video")}>
                   Videos
                 </NavDrawerLink>
-                <NavDrawerLink href="/battle" active={pathname.startsWith("/battle")}>
-                  Battle
+                <NavDrawerLink href="/games" active={pathname.startsWith("/games")}>
+                  Games
                 </NavDrawerLink>
                 <NavDrawerLink href="/notes" active={pathname.startsWith("/notes")}>
                   Notes
