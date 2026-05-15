@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #9fe870;
+  --color-on-primary: #0e0f0c;
+  --color-primary-active: #cdffad;
+  --color-primary-pale: #e2f6d5;
+  --color-ink: #0e0f0c;
+  --color-ink-deep: #163300;
+  --color-body: #454745;
+  --color-mute: #868685;
+  --color-canvas: #ffffff;
+  --color-canvas-soft: #e8ebe6;
+  
+  --radius-xl: 24px;
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+
+  --font-inter: var(--font-inter);
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #0e0f0c;
+}
+
+body {
+  background: var(--color-canvas-soft);
+  color: var(--color-ink);
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+/* Custom Utilities for Wise Design */
+@utility card-white {
+  background-color: var(--color-canvas);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+}
+
+@utility btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  font-weight: 600;
+  padding: 12px 24px;
+  border-radius: var(--radius-xl);
+  transition: background-color 0.2s;
+  &:hover {
+    background-color: var(--color-primary-active);
+  }
+}
+
+@utility btn-secondary {
+  background-color: var(--color-canvas-soft);
+  color: var(--color-ink);
+  font-weight: 600;
+  padding: 12px 24px;
+  border-radius: var(--radius-xl);
+  transition: opacity 0.2s;
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+/* Google Translate Widget Styling */
+.goog-te-banner-frame.skiptranslate {
+  display: none !important;
+}
+body {
+  top: 0px !important;
+}
+#google_translate_element {
+  display: inline-block;
+}
