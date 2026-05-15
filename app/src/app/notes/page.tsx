@@ -14,6 +14,7 @@ import {
 } from "@/lib/sync"
 import Link from "next/link"
 import { Plus, Search, Trash2, FileText, Clock } from "lucide-react"
+import { useConfirm } from "@/components/ui/confirm"
 
 export default function NotesPage() {
   const { user, loading: authLoading } = useAuth()
@@ -21,6 +22,7 @@ export default function NotesPage() {
   const [notes, setNotes] = useState<Note[]>([])
   const [search, setSearch] = useState("")
   const [ready, setReady] = useState(false)
+  const { confirm } = useConfirm()
 
   const refresh = useCallback(() => {
     setNotes(getNotes())
@@ -55,7 +57,8 @@ export default function NotesPage() {
   const handleDelete = async (e: React.MouseEvent, note: Note) => {
     e.preventDefault()
     e.stopPropagation()
-    if (!confirm(`Delete "${note.title || "Untitled"}"?`)) return
+    const ok = await confirm({ title: "Delete note", message: `Delete "${note.title || "Untitled"}"?`, confirmLabel: "Delete", variant: "danger" })
+    if (!ok) return
     deleteNoteLocally(note.id)
     if (user) deleteNoteFromFirestore(user.uid, note.id)
     refresh()
@@ -79,7 +82,7 @@ export default function NotesPage() {
     <div className="min-h-screen bg-ink">
       <div className="fixed top-0 right-0 w-[500px] h-[500px] rounded-full bg-primary/3 blur-[120px] pointer-events-none" />
 
-      <div className="relative mx-auto max-w-5xl px-4 py-8 md:py-14">
+      <div className="relative mx-auto max-w-7xl px-4 py-8 md:py-14">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>

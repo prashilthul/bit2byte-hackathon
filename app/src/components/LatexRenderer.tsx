@@ -24,9 +24,9 @@ export default function LatexRenderer({ content }: LatexRendererProps) {
       if (line.trim().startsWith("$$") && line.trim().endsWith("$$") && line.trim().length > 2) {
         const math = line.trim().slice(2, -2)
         try {
-          html += katex.renderToString(math, { displayMode: true, throwOnError: false })
+          html += `<div class="my-10 flex justify-center scale-110 md:scale-125 overflow-x-auto py-4">${katex.renderToString(math, { displayMode: true, throwOnError: false })}</div>`
         } catch {
-          html += `<div class="text-negative">${math}</div>`
+          html += `<div class="text-negative text-center my-6">${math}</div>`
         }
         continue
       }
@@ -42,53 +42,53 @@ export default function LatexRenderer({ content }: LatexRendererProps) {
 
       if (inBlockMath) {
         try {
-          html += katex.renderToString(line.trim(), { displayMode: true, throwOnError: false })
+          html += `<div class="flex justify-center scale-110 md:scale-125 my-4">${katex.renderToString(line.trim(), { displayMode: true, throwOnError: false })}</div>`
         } catch {
-          html += line
+          html += `<div class="text-center">${line}</div>`
         }
         continue
       }
 
       // Headings
       if (line.startsWith("### ")) {
-        html += `<h3 class="text-display-xs text-canvas-soft font-bold mt-6 mb-2">${renderInlineMath(line.replace("### ", ""))}</h3>`
+        html += `<h3 class="text-display-xs text-white font-bold mt-12 mb-6 tracking-tight">${renderInlineMath(line.replace("### ", ""))}</h3>`
         continue
       }
       if (line.startsWith("## ")) {
-        html += `<h2 class="text-display-xs text-canvas-soft font-black mt-8 mb-3">${renderInlineMath(line.replace("## ", ""))}</h2>`
+        html += `<h2 class="text-display-sm text-white font-black mt-16 mb-8 tracking-tighter">${renderInlineMath(line.replace("## ", ""))}</h2>`
         continue
       }
       if (line.startsWith("# ")) {
-        html += `<h1 class="text-display-sm text-canvas-soft font-black mt-8 mb-4">${renderInlineMath(line.replace("# ", ""))}</h1>`
+        html += `<h1 class="text-display-md text-white font-black mt-20 mb-10 tracking-tighter">${renderInlineMath(line.replace("# ", ""))}</h1>`
         continue
       }
 
       // Blockquote
       if (line.startsWith("> ")) {
-        html += `<blockquote class="border-l-2 border-primary/30 pl-4 my-3 text-canvas-soft/60 italic">${renderInlineMath(line.replace("> ", ""))}</blockquote>`
+        html += `<blockquote class="border-l-4 border-primary/20 bg-white/5 rounded-r-xl px-8 py-6 my-10 text-body-lg text-canvas-soft/80 italic leading-relaxed font-medium">${renderInlineMath(line.replace("> ", ""))}</blockquote>`
         continue
       }
 
       // List items
       if (line.startsWith("- ")) {
-        html += `<li class="text-body-md text-canvas-soft/70 ml-5 mb-1">${renderInlineMath(line.replace("- ", ""))}</li>`
+        html += `<li class="text-body-lg text-canvas-soft/70 ml-6 mb-4 list-none relative before:content-[''] before:absolute before:-left-6 before:top-3 before:w-1.5 before:h-1.5 before:bg-primary/40 before:rounded-full">${renderInlineMath(line.replace("- ", ""))}</li>`
         continue
       }
 
       // Empty line
       if (line.trim() === "") {
-        html += '<div class="h-3" />'
+        html += '<div class="h-6" />'
         continue
       }
 
       // Regular paragraph with inline math
-      html += `<p class="text-body-md text-canvas-soft/70 mb-3 leading-relaxed">${renderInlineMath(line)}</p>`
+      html += `<p class="text-body-lg text-canvas-soft/60 mb-8 leading-[1.7] tracking-tight font-medium">${renderInlineMath(line)}</p>`
     }
 
     ref.current.innerHTML = html
   }, [content])
 
-  return <div ref={ref} className="katex-renderer" />
+  return <div ref={ref} className="katex-renderer select-text selection:bg-primary/20 selection:text-primary" />
 }
 
 function renderInlineMath(text: string): string {

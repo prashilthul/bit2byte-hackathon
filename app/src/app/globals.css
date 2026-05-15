@@ -40,6 +40,7 @@
 
 html {
   scroll-behavior: auto;
+  overflow-x: hidden;
 }
 
 body {
@@ -48,6 +49,9 @@ body {
   font-family: Inter, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 h1, h2, h3, h4, h5, h6 {

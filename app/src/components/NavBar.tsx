@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client"
 
 import { useState, useEffect, useRef } from "react"
@@ -17,15 +18,8 @@ export default function NavBar() {
   const { user, userData } = useAuth()
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
   const drawerRef = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20)
-    window.addEventListener("scroll", onScroll, { passive: true })
-    return () => window.removeEventListener("scroll", onScroll)
-  }, [])
 
   useEffect(() => {
     setMenuOpen(false)
@@ -47,12 +41,9 @@ export default function NavBar() {
   }
 
   const isLanding = pathname === "/"
-  const navBg = scrolled
-    ? "bg-ink/90 backdrop-blur-xl border-b border-primary/5"
-    : "bg-ink/70 backdrop-blur-md"
 
   return (
-    <nav className={`sticky top-0 z-50 transition-all duration-300 ${navBg}`}>
+    <nav className="sticky top-0 z-50 bg-ink border-b border-primary/5">
       <div className="mx-auto max-w-6xl flex items-center justify-between px-5 py-3 md:py-4">
         {/* Logo */}
         <Link
@@ -80,6 +71,12 @@ export default function NavBar() {
           )}
           {user && (
             <>
+              <Link
+                href="/videos"
+                className="text-sm font-semibold text-canvas-soft/70 hover:text-primary transition-colors"
+              >
+                Videos
+              </Link>
               <Link
                 href="/notes"
                 className="text-sm font-semibold text-canvas-soft/70 hover:text-primary transition-colors"
@@ -211,6 +208,9 @@ export default function NavBar() {
             )}
             {user && (
               <>
+                <NavDrawerLink href="/videos" active={pathname.startsWith("/videos") || pathname.startsWith("/video")}>
+                  Videos
+                </NavDrawerLink>
                 <NavDrawerLink href="/notes" active={pathname.startsWith("/notes")}>
                   Notes
                 </NavDrawerLink>

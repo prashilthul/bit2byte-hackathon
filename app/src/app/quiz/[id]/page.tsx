@@ -46,6 +46,12 @@ export default function QuizPage() {
   const touchStartY = useRef(0)
   const swiped = useRef(false)
   const autoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const answeredRef = useRef(false)
+  const currentIdxRef = useRef(0)
+
+  // Keep refs in sync with state
+  useEffect(() => { answeredRef.current = answered }, [answered])
+  useEffect(() => { currentIdxRef.current = currentIndex }, [currentIndex])
 
   useEffect(() => {
     if (authLoading) return
@@ -88,6 +94,7 @@ export default function QuizPage() {
   }, [answered, quiz, currentIndex])
 
   const goNext = useCallback(() => {
+    if (autoTimerRef.current) { clearTimeout(autoTimerRef.current); autoTimerRef.current = null }
     if (!quiz) return
     if (currentIndex < total - 1) {
       setCurrentIndex((i) => i + 1)
@@ -103,6 +110,7 @@ export default function QuizPage() {
   useEffect(() => {
     if (answered && !finished) {
       autoTimerRef.current = setTimeout(() => {
+        if (autoTimerRef.current === null) return // Already cancelled
         if (cardRef.current) {
           gsap.to(cardRef.current, {
             x: 300, opacity: 0, duration: 0.2, ease: "power2.in",
@@ -111,7 +119,7 @@ export default function QuizPage() {
         } else { goNext() }
       }, 1200)
     }
-    return () => { if (autoTimerRef.current) clearTimeout(autoTimerRef.current) }
+    return () => { if (autoTimerRef.current) { clearTimeout(autoTimerRef.current); autoTimerRef.current = null } }
   }, [answered, finished, goNext])
 
   const handleSubmit = async () => {
@@ -138,6 +146,7 @@ export default function QuizPage() {
     const dx = e.changedTouches[0].clientX - touchStartX.current
     const dy = e.changedTouches[0].clientY - touchStartY.current
     if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 60) {
+      if (autoTimerRef.current) { clearTimeout(autoTimerRef.current); autoTimerRef.current = null }
       swiped.current = true
       const dir = dx > 0 ? 1 : -1
       gsap.to(cardRef.current, {
@@ -147,15 +156,16 @@ export default function QuizPage() {
     }
   }
 
-  // Keyboard
+  // Keyboard (uses refs to avoid stale closures)
   useEffect(() => {
     if (finished) return
     const onKey = (e: KeyboardEvent) => {
-      if (!answered && e.key >= "1" && e.key <= "4") {
+      if (!answeredRef.current && e.key >= "1" && e.key <= "4") {
         const idx = parseInt(e.key) - 1
-        if (quiz && idx < quiz.questions[currentIndex].options.length) handleSelect(idx)
+        if (quiz && idx < (quiz.questions[currentIdxRef.current]?.options.length || 0)) handleSelect(idx)
       }
-      if (answered && (e.key === "ArrowRight" || e.key === "ArrowLeft" || e.key === "Enter")) {
+      if (answeredRef.current && (e.key === "ArrowRight" || e.key === "ArrowLeft" || e.key === "Enter")) {
+        if (autoTimerRef.current) { clearTimeout(autoTimerRef.current); autoTimerRef.current = null }
         if (cardRef.current) {
           gsap.to(cardRef.current, {
             x: 300, opacity: 0, duration: 0.2, ease: "power2.in",
@@ -166,7 +176,7 @@ export default function QuizPage() {
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [answered, finished, quiz, currentIndex, goNext, handleSelect])
+  }, [finished, quiz, handleSelect, goNext])
 
   if (authLoading || loading) {
     return (
@@ -359,6 +369,7 @@ export default function QuizPage() {
                 variant="primary"
                 size="sm"
                 onClick={() => {
+                  if (autoTimerRef.current) { clearTimeout(autoTimerRef.current); autoTimerRef.current = null }
                   if (cardRef.current) {
                     gsap.to(cardRef.current, { x: 300, opacity: 0, duration: 0.2, ease: "power2.in", onComplete: goNext })
                   }

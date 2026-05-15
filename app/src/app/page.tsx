@@ -173,7 +173,7 @@ export default function HomePage() {
       <div className="grain-overlay opacity-[0.02] pointer-events-none" />
 
       {/* ─── Hero Section ─── */}
-      <section ref={heroRef} className="relative h-screen flex flex-col items-center justify-center z-20 overflow-visible px-6">
+      <section ref={heroRef} className="relative h-screen flex flex-col items-center justify-center z-20 overflow-hidden px-6">
         <div className="absolute inset-0 pointer-events-none">
           {ORBIT_POSITIONS.map((pos, i) => {
             const Icon = iconSet[i % iconSet.length]

@@ -12,6 +12,7 @@ import {
 } from "@/lib/sync"
 import Link from "next/link"
 import { ArrowLeft, Save, Trash2 } from "lucide-react"
+import { useConfirm } from "@/components/ui/confirm"
 
 export default function NoteEditorPage() {
   const { id } = useParams<{ id: string }>()
@@ -24,6 +25,7 @@ export default function NoteEditorPage() {
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const loadedRef = useRef(false)
+  const { confirm } = useConfirm()
 
   useEffect(() => {
     if (authLoading) return
@@ -78,7 +80,8 @@ export default function NoteEditorPage() {
 
   const handleDelete = async () => {
     if (!note) return
-    if (!confirm(`Delete "${title || "Untitled"}"?`)) return
+    const ok = await confirm({ title: "Delete note", message: `Delete "${title || "Untitled"}"?`, confirmLabel: "Delete", variant: "danger" })
+    if (!ok) return
     const { deleteNoteLocally, deleteNoteFromFirestore } = await import("@/lib/sync")
     deleteNoteLocally(note.id)
     if (user) deleteNoteFromFirestore(user.uid, note.id)

@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import "./globals.css"
 import { AuthProvider } from "@/context/AuthContext"
 import { ToastProvider } from "@/context/ToastContext"
+import { ConfirmProvider } from "@/components/ui/confirm"
 import NavBar from "@/components/NavBar"
 import Toaster from "@/components/ui/toaster"
 
@@ -30,9 +31,11 @@ export default function RootLayout({
       <body className="min-h-screen bg-ink font-sans text-canvas-soft antialiased">
         <AuthProvider>
           <ToastProvider>
-            <NavBar />
-            <main>{children}</main>
-            <Toaster />
+            <ConfirmProvider>
+              <NavBar />
+              <main className="overflow-x-hidden">{children}</main>
+              <Toaster />
+            </ConfirmProvider>
           </ToastProvider>
         </AuthProvider>
       </body>

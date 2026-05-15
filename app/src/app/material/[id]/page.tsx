@@ -142,65 +142,70 @@ export default function MaterialPage() {
   }
 
   return (
-    <div className="min-h-screen bg-ink">
+    <div className="min-h-screen bg-ink text-canvas-soft">
       {/* Progress bar */}
-      <div className="fixed top-0 left-0 right-0 h-0.5 z-50 bg-surface-elevated">
+      <div className="fixed top-0 left-0 right-0 h-1 z-50 bg-white/5">
         <div
-          className="h-full bg-primary transition-all duration-200"
+          className="h-full bg-primary shadow-[0_0_15px_rgba(159,232,112,0.5)] transition-all duration-300"
           style={{ width: `${progress}%` }}
         />
       </div>
 
-      <div className="mx-auto max-w-6xl px-4 py-6 md:py-10">
+      <div className="mx-auto max-w-5xl px-6 py-10 md:py-20">
         {/* Top bar */}
-        <div className="flex items-start justify-between mb-6 gap-3">
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            <Link
-              href={`/subject/${material.subjectId}`}
-              className="shrink-0 w-9 h-9 rounded-xl bg-surface-card border border-primary/5 flex items-center justify-center text-canvas-soft/50 hover:text-primary hover:border-primary/20 transition-all"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </Link>
-            <div className="min-w-0">
-              <span className="text-caption text-primary/60 font-semibold uppercase tracking-wider">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-4 mb-6">
+              <Link
+                href={`/subject/${material.subjectId}`}
+                className="group flex items-center gap-2 text-caption font-bold text-primary/60 hover:text-primary transition-colors uppercase tracking-[0.2em]"
+              >
+                <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
                 {material.subjectId}
+              </Link>
+              <span className="w-1 h-1 rounded-full bg-white/10" />
+              <span className="text-caption font-bold text-white/30 uppercase tracking-[0.2em]">
+                Grade {material.grade}
               </span>
-              <h1 className="text-body-md-strong md:text-display-sm text-canvas-soft leading-tight mt-0.5 truncate">
-                {material.title}
-              </h1>
             </div>
+            <h1 className="text-display-sm md:text-display-md text-white font-black leading-tight tracking-tightest pb-3 md:pb-4">
+              {material.title}
+            </h1>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setNoteOpen(!noteOpen)}
-              className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all cursor-pointer ${
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-full border text-sm font-bold transition-all cursor-pointer ${
                 noteOpen
-                  ? "bg-primary/10 border-primary/30 text-primary"
-                  : "bg-surface-card border-primary/5 text-canvas-soft/40 hover:text-primary hover:border-primary/20"
+                  ? "bg-primary text-ink border-primary shadow-[0_0_20px_rgba(159,232,112,0.3)]"
+                  : "bg-white/5 border-white/10 text-white/60 hover:text-white hover:border-white/20"
               }`}
             >
               <Pencil className="w-4 h-4" />
+              {noteOpen ? "Hide Notes" : "Take Notes"}
             </button>
             <button
               onClick={handleDownload}
-              className="w-9 h-9 rounded-xl bg-surface-card border border-primary/5 flex items-center justify-center text-canvas-soft/40 hover:text-primary hover:border-primary/20 transition-all cursor-pointer"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/5 border border-white/10 text-white/60 hover:text-white hover:border-white/20 transition-all cursor-pointer font-bold text-sm"
             >
               <Download className="w-4 h-4" />
+              Download
             </button>
           </div>
         </div>
 
         {/* Reading area + Notes panel */}
-        <div className="flex gap-6">
+        <div className="flex flex-col md:flex-row gap-12 relative">
           {/* Main content */}
           <div
             ref={contentRef}
-            className={`flex-1 min-w-0 transition-all duration-300 ${
-              noteOpen ? "hidden md:block md:max-w-[calc(100%-320px)]" : "block max-w-full"
+            className={`flex-1 min-w-0 transition-all duration-500 ${
+              noteOpen ? "md:max-w-[calc(100%-400px)]" : "max-w-full"
             }`}
           >
-            <div className="rounded-2xl bg-surface-card border border-primary/5 p-5 md:p-10 print:shadow-none print:border-0">
-              <div className="max-w-none text-canvas-soft/80 leading-relaxed reading-content">
+            <div className="prose prose-invert max-w-none">
+              <div className="reading-content-container pb-24">
                 <LatexRenderer content={material.content} />
               </div>
             </div>
