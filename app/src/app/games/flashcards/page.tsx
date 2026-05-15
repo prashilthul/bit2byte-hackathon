@@ -4,16 +4,14 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
 import Link from "next/link"
-import { BookOpen, ChevronRight, ArrowLeft, Trophy, RotateCw } from "lucide-react"
+import { BookOpen, ChevronRight, ArrowLeft, Trophy, RotateCw, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { updateRating } from "@/lib/battle"
 
 interface FlashCard {
   q: string
-  options: string[]
-  answer: number
+  a: string
   topic: string
-  explanation: string
 }
 
 const SUBJECTS = [
@@ -25,52 +23,52 @@ const SUBJECTS = [
 
 const DECKS: Record<string, FlashCard[]> = {
   Science: [
-    { q: "What is the chemical symbol for gold?", options: ["Go", "Gd", "Au", "Ag"], answer: 2, topic: "Chemistry", explanation: "Au comes from the Latin word 'aurum' meaning gold." },
-    { q: "What planet is closest to the Sun?", options: ["Venus", "Mercury", "Earth", "Mars"], answer: 1, topic: "Astronomy", explanation: "Mercury orbits at an average distance of 58 million km from the Sun." },
-    { q: "What gas do plants release during photosynthesis?", options: ["CO₂", "Oxygen", "Nitrogen", "Hydrogen"], answer: 1, topic: "Biology", explanation: "Plants release oxygen as a byproduct of photosynthesis." },
-    { q: "What is the pH of pure water?", options: ["5", "7", "9", "3"], answer: 1, topic: "Chemistry", explanation: "Pure water has a neutral pH of 7." },
-    { q: "What force keeps planets in orbit?", options: ["Magnetism", "Friction", "Gravity", "Nuclear"], answer: 2, topic: "Physics", explanation: "Gravity is the attractive force between all objects with mass." },
-    { q: "What is the smallest unit of life?", options: ["Atom", "Cell", "Molecule", "Tissue"], answer: 1, topic: "Biology", explanation: "The cell is the basic structural and functional unit of all living organisms." },
-    { q: "What type of rock forms from cooled magma?", options: ["Sedimentary", "Metamorphic", "Igneous", "Fossil"], answer: 2, topic: "Geology", explanation: "Igneous rocks form when magma or lava cools and solidifies." },
-    { q: "What is the speed of sound at sea level?", options: ["343 m/s", "700 m/s", "150 m/s", "1000 m/s"], answer: 0, topic: "Physics", explanation: "Sound travels at approximately 343 meters per second at sea level." },
-    { q: "What element is most abundant in Earth's atmosphere?", options: ["Oxygen", "CO₂", "Nitrogen", "Argon"], answer: 2, topic: "Chemistry", explanation: "Nitrogen makes up about 78% of Earth's atmosphere." },
-    { q: "What organ pumps blood through the body?", options: ["Lungs", "Brain", "Heart", "Liver"], answer: 2, topic: "Biology", explanation: "The heart is a muscular organ that pumps blood through the circulatory system." },
+    { q: "What is the chemical symbol for gold?", a: "Au (from Latin 'aurum')", topic: "Chemistry" },
+    { q: "What planet is closest to the Sun?", a: "Mercury", topic: "Astronomy" },
+    { q: "What gas do plants release during photosynthesis?", a: "Oxygen", topic: "Biology" },
+    { q: "What is the pH of pure water?", a: "7 (neutral)", topic: "Chemistry" },
+    { q: "What force keeps planets in orbit?", a: "Gravity", topic: "Physics" },
+    { q: "What is the smallest unit of life?", a: "The cell", topic: "Biology" },
+    { q: "What type of rock forms from cooled magma?", a: "Igneous rock", topic: "Geology" },
+    { q: "What is the speed of sound at sea level?", a: "343 meters per second", topic: "Physics" },
+    { q: "What element is most abundant in Earth's atmosphere?", a: "Nitrogen (78%)", topic: "Chemistry" },
+    { q: "What organ pumps blood through the body?", a: "The heart", topic: "Biology" },
   ],
   Technology: [
-    { q: "What does CPU stand for?", options: ["Central Process Unit", "Central Processing Unit", "Computer Personal Unit", "Core Process Unit"], answer: 1, topic: "Hardware", explanation: "The CPU is the brain of the computer that processes instructions." },
-    { q: "What does HTML stand for?", options: ["HyperText Markup Language", "High Tech Modern Language", "Home Tool Markup Language", "HyperTransfer Markup Language"], answer: 0, topic: "Web", explanation: "HTML is the standard markup language for creating web pages." },
-    { q: "What is a variable in programming?", options: ["A fixed value", "A storage location", "A loop", "A function"], answer: 1, topic: "Programming", explanation: "A variable stores data that can be changed during program execution." },
-    { q: "What does IP stand for?", options: ["Internet Protocol", "Internal Program", "Integrated Processor", "Interface Port"], answer: 0, topic: "Networking", explanation: "IP is the principal communication protocol for relaying data across networks." },
-    { q: "What is a loop used for?", options: ["Making decisions", "Repeating code", "Storing data", "Defining functions"], answer: 1, topic: "Programming", explanation: "Loops execute a block of code repeatedly until a condition is met." },
-    { q: "What is the cloud in computing?", options: ["Weather data", "Remote servers accessed via internet", "Local storage", "A type of software"], answer: 1, topic: "Cloud", explanation: "The cloud refers to servers accessed over the internet for storage and computing." },
-    { q: "What does RAM stand for?", options: ["Read Access Memory", "Random Access Memory", "Rapid Access Module", "Run Application Mode"], answer: 1, topic: "Hardware", explanation: "RAM is the computer's temporary memory used for active tasks." },
-    { q: "What is a function in code?", options: ["A variable", "A reusable block of code", "A data type", "A loop"], answer: 1, topic: "Programming", explanation: "Functions are reusable blocks of code that perform specific tasks." },
-    { q: "What protects a network from unauthorized access?", options: ["VPN", "Firewall", "Browser", "Router"], answer: 1, topic: "Security", explanation: "A firewall monitors and controls incoming and outgoing network traffic." },
-    { q: "What does SQL stand for?", options: ["Simple Query Language", "Structured Query Language", "Sequential Query Logic", "System Query Layer"], answer: 1, topic: "Databases", explanation: "SQL is used to manage and query relational databases." },
+    { q: "What does CPU stand for?", a: "Central Processing Unit", topic: "Hardware" },
+    { q: "What does HTML stand for?", a: "HyperText Markup Language", topic: "Web" },
+    { q: "What is a variable in programming?", a: "A storage location for data that can change", topic: "Programming" },
+    { q: "What does IP stand for?", a: "Internet Protocol", topic: "Networking" },
+    { q: "What is a loop used for?", a: "Repeating a block of code", topic: "Programming" },
+    { q: "What is the cloud in computing?", a: "Remote servers accessed via the internet", topic: "Cloud" },
+    { q: "What does RAM stand for?", a: "Random Access Memory", topic: "Hardware" },
+    { q: "What is a function in code?", a: "A reusable block of code that performs a task", topic: "Programming" },
+    { q: "What protects a network from unauthorized access?", a: "A firewall", topic: "Security" },
+    { q: "What does SQL stand for?", a: "Structured Query Language", topic: "Databases" },
   ],
   Engineering: [
-    { q: "What is the main force bridges must resist?", options: ["Tension and compression", "Only tension", "Only compression", "Friction"], answer: 0, topic: "Structures", explanation: "Bridges must handle both tension (pulling) and compression (pushing) forces." },
-    { q: "What simple machine is a ramp?", options: ["Lever", "Pulley", "Inclined plane", "Wedge"], answer: 2, topic: "Mechanics", explanation: "An inclined plane reduces the force needed to lift an object." },
-    { q: "What does Ohm's Law state?", options: ["V = IR", "F = ma", "E = mc²", "PV = nRT"], answer: 0, topic: "Electronics", explanation: "Ohm's Law: Voltage = Current × Resistance." },
-    { q: "What type of circuit has multiple paths?", options: ["Series", "Parallel", "Short", "Open"], answer: 1, topic: "Electronics", explanation: "In parallel circuits, each component has its own path for current." },
-    { q: "What is the main alloy in steel?", options: ["Iron and carbon", "Copper and tin", "Aluminum and zinc", "Nickel and chrome"], answer: 0, topic: "Materials", explanation: "Steel is primarily iron with 0.2-2.1% carbon." },
-    { q: "What is a cantilever?", options: ["A type of engine", "A beam fixed at one end", "A type of bridge only", "A measurement tool"], answer: 1, topic: "Structures", explanation: "A cantilever is a rigid beam anchored at only one end." },
-    { q: "What does CAD stand for?", options: ["Computer Automated Design", "Computer-Aided Design", "Central Assembly Drawing", "Code and Design"], answer: 1, topic: "Design", explanation: "CAD software is used to create precision drawings and 3D models." },
-    { q: "What is torque?", options: ["Rotational force", "Linear speed", "Electrical current", "Heat energy"], answer: 0, topic: "Mechanics", explanation: "Torque is the rotational equivalent of linear force." },
-    { q: "What material is known for shape memory?", options: ["Steel", "Nitinol", "Copper", "Aluminum"], answer: 1, topic: "Materials", explanation: "Nitinol (nickel-titanium) returns to its original shape when heated." },
-    { q: "What is the purpose of a flywheel?", options: ["Store rotational energy", "Increase speed", "Reduce friction", "Generate electricity"], answer: 0, topic: "Mechanics", explanation: "Flywheels store kinetic energy by maintaining rotational momentum." },
+    { q: "What two main forces must bridges resist?", a: "Tension (pulling) and compression (pushing)", topic: "Structures" },
+    { q: "What simple machine is a ramp?", a: "An inclined plane", topic: "Mechanics" },
+    { q: "What does Ohm's Law state?", a: "V = IR (Voltage = Current x Resistance)", topic: "Electronics" },
+    { q: "What type of circuit has multiple paths?", a: "Parallel circuit", topic: "Electronics" },
+    { q: "What is the main alloy in steel?", a: "Iron and carbon", topic: "Materials" },
+    { q: "What is a cantilever?", a: "A beam fixed at only one end", topic: "Structures" },
+    { q: "What does CAD stand for?", a: "Computer-Aided Design", topic: "Design" },
+    { q: "What is torque?", a: "Rotational force", topic: "Mechanics" },
+    { q: "What material is known for shape memory?", a: "Nitinol (nickel-titanium)", topic: "Materials" },
+    { q: "What is the purpose of a flywheel?", a: "To store rotational kinetic energy", topic: "Mechanics" },
   ],
   Mathematics: [
-    { q: "What is the square root of 144?", options: ["10", "11", "12", "13"], answer: 2, topic: "Arithmetic", explanation: "12 × 12 = 144, so the square root is 12." },
-    { q: "What is the value of π to 2 decimal places?", options: ["2.14", "3.14", "4.14", "1.14"], answer: 1, topic: "Geometry", explanation: "Pi is approximately 3.14159..., rounded to 3.14." },
-    { q: "What is the formula for area of a circle?", options: ["πr", "2πr", "πr²", "πr³"], answer: 2, topic: "Geometry", explanation: "Area of a circle = π × radius²." },
-    { q: "What is 15% of 200?", options: ["15", "20", "25", "30"], answer: 3, topic: "Arithmetic", explanation: "15% of 200 = 0.15 × 200 = 30." },
-    { q: "What is the next prime number after 7?", options: ["8", "9", "10", "11"], answer: 3, topic: "Number Theory", explanation: "11 is prime (divisible only by 1 and itself)." },
-    { q: "What is the slope-intercept form of a line?", options: ["y = mx + b", "y = ax² + c", "x + y = c", "y = 1/x"], answer: 0, topic: "Algebra", explanation: "y = mx + b where m is slope and b is the y-intercept." },
-    { q: "How many degrees in a triangle?", options: ["90°", "180°", "270°", "360°"], answer: 1, topic: "Geometry", explanation: "The sum of interior angles of any triangle is 180°." },
-    { q: "What is 2⁵?", options: ["16", "32", "64", "128"], answer: 1, topic: "Arithmetic", explanation: "2⁵ = 2 × 2 × 2 × 2 × 2 = 32." },
-    { q: "What is the median of 3, 7, 9, 12, 15?", options: ["7", "9", "12", "3"], answer: 1, topic: "Statistics", explanation: "The median is the middle value: 9." },
-    { q: "What is a logarithm?", options: ["The inverse of exponentiation", "A type of fraction", "A geometric shape", "A type of graph"], answer: 0, topic: "Algebra", explanation: "A logarithm is the inverse operation to exponentiation." },
+    { q: "What is the square root of 144?", a: "12", topic: "Arithmetic" },
+    { q: "What is the value of pi to 2 decimal places?", a: "3.14", topic: "Geometry" },
+    { q: "What is the formula for area of a circle?", a: "A = πr²", topic: "Geometry" },
+    { q: "What is 15% of 200?", a: "30", topic: "Arithmetic" },
+    { q: "What is the next prime number after 7?", a: "11", topic: "Number Theory" },
+    { q: "What is the slope-intercept form of a line?", a: "y = mx + b", topic: "Algebra" },
+    { q: "How many degrees in a triangle?", a: "180 degrees", topic: "Geometry" },
+    { q: "What is 2 to the power of 5?", a: "32", topic: "Arithmetic" },
+    { q: "What is the median of 3, 7, 9, 12, 15?", a: "9", topic: "Statistics" },
+    { q: "What is a logarithm?", a: "The inverse of exponentiation", topic: "Algebra" },
   ],
 }
 
@@ -80,10 +78,9 @@ export default function FlashcardsPage() {
   const [subject, setSubject] = useState<string | null>(null)
   const [cards, setCards] = useState<FlashCard[]>([])
   const [idx, setIdx] = useState(0)
-  const [selected, setSelected] = useState<number | null>(null)
   const [flipped, setFlipped] = useState(false)
-  const [results, setResults] = useState<boolean[]>([])
-  const [complete, setComplete] = useState(false)
+  const [known, setKnown] = useState(0)
+  const [done, setDone] = useState(false)
 
   useEffect(() => {
     if (authLoading) return
@@ -95,32 +92,35 @@ export default function FlashcardsPage() {
     setSubject(subj)
     setCards(deck)
     setIdx(0)
-    setSelected(null)
     setFlipped(false)
-    setResults([])
-    setComplete(false)
+    setKnown(0)
+    setDone(false)
   }
 
-  const handleSelect = (optIdx: number) => {
-    if (selected !== null) return
-    setSelected(optIdx)
-    const correct = optIdx === cards[idx].answer
-    setResults((prev) => [...prev, correct])
-    setTimeout(() => setFlipped(true), 800)
-  }
-
-  const correctCount = results.filter(Boolean).length
-
-  const handleNext = () => {
+  const markKnown = () => {
     if (idx < cards.length - 1) {
+      setKnown((k) => k + 1)
       setIdx((i) => i + 1)
-      setSelected(null)
       setFlipped(false)
     } else {
-      setComplete(true)
-      const pct = Math.round((correctCount / cards.length) * 100)
+      const total = known + 1
+      setKnown(total)
+      setDone(true)
+      const pct = Math.round((total / cards.length) * 100)
       const delta = pct >= 90 ? 15 : pct >= 70 ? 8 : pct >= 50 ? 2 : -5
-      updateRating(user!.uid, "flashcards", delta)
+      if (user) updateRating(user.uid, "flashcards", delta)
+    }
+  }
+
+  const markUnknown = () => {
+    if (idx < cards.length - 1) {
+      setIdx((i) => i + 1)
+      setFlipped(false)
+    } else {
+      setDone(true)
+      const pct = Math.round((known / cards.length) * 100)
+      const delta = pct >= 90 ? 15 : pct >= 70 ? 8 : pct >= 50 ? 2 : -5
+      if (user) updateRating(user.uid, "flashcards", delta)
     }
   }
 
@@ -145,7 +145,7 @@ export default function FlashcardsPage() {
             <BookOpen className="w-8 h-8 text-primary" />
           </div>
           <h1 className="text-display-sm text-canvas-soft mb-2">Flash Cards</h1>
-          <p className="text-body-sm text-canvas-soft/40 mb-10 max-w-md mx-auto">Pick a subject and flip through STEM flashcards.</p>
+          <p className="text-body-sm text-canvas-soft/40 mb-10 max-w-md mx-auto">Pick a subject and flip through Q&A flashcards.</p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {SUBJECTS.map((sub) => (
               <button key={sub.id} onClick={() => startDeck(sub.id)}
@@ -163,31 +163,29 @@ export default function FlashcardsPage() {
   }
 
   // ── Results ──
-  if (complete) {
-    const pct = Math.round((correctCount / cards.length) * 100)
+  if (done) {
+    const pct = Math.round((known / cards.length) * 100)
     return (
       <div className="min-h-screen bg-ink flex items-center justify-center px-4 py-12">
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
         <div className="relative max-w-lg w-full bg-surface-card rounded-2xl border border-primary/5 p-8 md:p-10 text-center">
           <Trophy className="w-16 h-16 mx-auto mb-4 text-primary" />
           <h2 className="text-display-sm text-canvas-soft mb-2">Deck Complete!</h2>
-          <p className="text-body-sm text-canvas-soft/40 mb-8">{subject} flashcard session finished.</p>
-
+          <p className="text-body-sm text-canvas-soft/40 mb-8">{subject} session finished.</p>
           <div className="grid grid-cols-3 gap-4 mb-8">
             <div className="rounded-xl bg-surface-elevated border border-primary/5 p-4">
-              <p className="text-display-xs text-primary font-black">{correctCount}</p>
-              <p className="text-caption text-canvas-soft/30 uppercase mt-1">Correct</p>
+              <p className="text-display-xs text-primary font-black">{known}</p>
+              <p className="text-caption text-canvas-soft/30 uppercase mt-1">Known</p>
             </div>
             <div className="rounded-xl bg-surface-elevated border border-primary/5 p-4">
-              <p className="text-display-xs text-negative font-black">{cards.length - correctCount}</p>
-              <p className="text-caption text-canvas-soft/30 uppercase mt-1">Wrong</p>
+              <p className="text-display-xs text-negative font-black">{cards.length - known}</p>
+              <p className="text-caption text-canvas-soft/30 uppercase mt-1">Review</p>
             </div>
             <div className="rounded-xl bg-surface-elevated border border-primary/5 p-4">
               <p className="text-display-xs text-primary font-black">{pct}%</p>
               <p className="text-caption text-canvas-soft/30 uppercase mt-1">Accuracy</p>
             </div>
           </div>
-
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button variant="secondary" onClick={() => startDeck(subject)} className="bg-surface-elevated text-canvas-soft hover:bg-surface-card cursor-pointer">
               <RotateCw className="w-4 h-4 mr-1.5" /> Retry Deck
@@ -207,7 +205,9 @@ export default function FlashcardsPage() {
 
   return (
     <div className="min-h-screen bg-ink">
-      <div className="mx-auto max-w-3xl px-4 py-6 md:py-10">
+      <div className="fixed top-0 right-0 w-[500px] h-[500px] rounded-full bg-primary/3 blur-[100px] pointer-events-none" />
+
+      <div className="relative mx-auto max-w-2xl px-4 py-6 md:py-10">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <button onClick={() => setSubject(null)} className="flex items-center gap-2 text-caption font-bold uppercase tracking-wider text-canvas-soft/40 hover:text-primary transition-colors cursor-pointer">
@@ -215,70 +215,59 @@ export default function FlashcardsPage() {
           </button>
           <div className="text-right">
             <span className="text-caption text-canvas-soft/30 uppercase tracking-wider">{subject}</span>
-            <p className="text-sm font-bold text-primary">{results.length}/{cards.length}</p>
+            <p className="text-sm font-bold text-primary">{idx + 1}/{cards.length}</p>
           </div>
         </div>
 
         {/* Progress */}
-        <div className="h-1.5 bg-surface-elevated rounded-full overflow-hidden mb-8">
-          <div className="h-full rounded-full transition-all" style={{ width: `${(results.length / cards.length) * 100}%`, background: subjectColor }} />
+        <div className="h-1.5 bg-surface-elevated rounded-full overflow-hidden mb-6">
+          <div className="h-full rounded-full transition-all" style={{ width: `${(idx / cards.length) * 100}%`, background: subjectColor }} />
         </div>
 
         {/* Card */}
-        <div className="perspective-1000" style={{ perspective: "1000px" }}>
+        <div className="perspective-1000 mb-6" style={{ perspective: "1000px" }}>
           <div
-            className="relative transition-all duration-700"
-            style={{ transformStyle: "preserve-3d", transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)" }}
+            className="relative transition-all duration-500 cursor-pointer"
+            style={{ transformStyle: "preserve-3d", transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)", minHeight: "400px" }}
+            onClick={() => !flipped && setFlipped(true)}
           >
             {/* Front */}
-            <div className="rounded-2xl bg-surface-card border border-primary/5 p-6 md:p-8" style={{ backfaceVisibility: "hidden" }}>
-              <span className="text-caption font-semibold uppercase tracking-wider" style={{ color: `${subjectColor}99` }}>{card.topic}</span>
-              <h2 className="text-display-xs text-canvas-soft mt-2 mb-6">{card.q}</h2>
-              <div className="space-y-3">
-                {card.options.map((opt, oi) => {
-                  const isSelected = selected === oi
-                  const isCorrect = oi === card.answer
-                  let cls = "border-surface-elevated bg-ink text-canvas-soft/70"
-                  if (flipped && isCorrect) cls = "border-primary bg-primary/10 text-primary"
-                  else if (isSelected && !flipped) cls = "border-primary/50 bg-primary/5 text-canvas-soft"
-                  else if (flipped && isSelected && !isCorrect) cls = "border-negative/50 bg-negative/10 text-negative"
-                  return (
-                    <button key={oi} disabled={selected !== null} onClick={() => handleSelect(oi)}
-                      className={`w-full text-left rounded-xl border-2 px-5 py-4 text-body-md transition-all cursor-pointer ${cls}`}>
-                      <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold mr-3 ${
-                        flipped && isCorrect ? "bg-primary text-on-primary" :
-                        isSelected ? "bg-primary/20 text-primary" : "bg-surface-elevated text-canvas-soft/40"
-                      }`}>{String.fromCharCode(65 + oi)}</span>
-                      {opt}
-                    </button>
-                  )
-                })}
-              </div>
-
-              {!flipped && selected !== null && (
-                <p className="text-center text-caption text-canvas-soft/30 mt-4">Flipping to show answer...</p>
-              )}
+            <div className="absolute inset-0 rounded-2xl bg-surface-card border border-primary/5 p-8 md:p-10 flex flex-col items-center justify-center text-center"
+              style={{ backfaceVisibility: "hidden" }}>
+              <span className="text-caption font-semibold uppercase tracking-wider mb-4" style={{ color: `${subjectColor}99` }}>{card.topic}</span>
+              <EyeOff className="w-6 h-6 mb-4" style={{ color: `${subjectColor}60` }} />
+              <p className="text-display-xs text-canvas-soft leading-snug mb-6">{card.q}</p>
+              <span className="text-caption text-canvas-soft/20">Tap to reveal answer</span>
             </div>
 
             {/* Back */}
-            {flipped && (
-              <div className="absolute inset-0 rounded-2xl bg-surface-card border border-primary/20 p-6 md:p-8 flex flex-col"
-                style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}>
-                <span className="text-caption font-semibold uppercase tracking-wider text-primary mb-4">Explanation</span>
-                <div className="rounded-xl bg-primary/10 border border-primary/20 p-4 mb-4">
-                  <p className="text-caption text-primary/70 uppercase tracking-wider mb-1">Answer</p>
-                  <p className="text-body-md-strong text-primary">{card.options[card.answer]}</p>
-                </div>
-                <p className="text-body-md text-canvas-soft/60 leading-relaxed flex-1">{card.explanation}</p>
-                <div className="mt-6 flex justify-end">
-                  <Button variant="primary" size="sm" onClick={handleNext} className="cursor-pointer">
-                    {idx < cards.length - 1 ? "Next Card" : "See Results"} <ChevronRight className="w-4 h-4 ml-1" />
-                  </Button>
-                </div>
-              </div>
-            )}
+            <div className="absolute inset-0 rounded-2xl bg-surface-card border-2 flex flex-col items-center justify-center text-center p-8 md:p-10"
+              style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)", borderColor: `${subjectColor}40` }}>
+              <span className="text-caption font-semibold uppercase tracking-wider mb-4 text-primary">Answer</span>
+              <Eye className="w-6 h-6 mb-4 text-primary" />
+              <p className="text-display-xs text-canvas-soft leading-snug mb-4">{card.a}</p>
+              <span className="text-caption text-canvas-soft/20">{card.topic}</span>
+            </div>
           </div>
         </div>
+
+        {/* Action buttons (only visible after flip) */}
+        {flipped && (
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={markUnknown}
+              className="flex-1 max-w-[200px] rounded-xl border-2 border-negative/30 py-4 text-negative font-bold text-sm hover:bg-negative/10 transition-all cursor-pointer"
+            >
+              Still Learning
+            </button>
+            <button
+              onClick={markKnown}
+              className="flex-1 max-w-[200px] rounded-xl border-2 border-primary/30 py-4 text-primary font-bold text-sm hover:bg-primary/10 transition-all cursor-pointer"
+            >
+              Got It
+            </button>
+          </div>
+        )}
       </div>
 
       <style>{`
