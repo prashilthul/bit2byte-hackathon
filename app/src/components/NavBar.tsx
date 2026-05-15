@@ -78,6 +78,12 @@ export default function NavBar() {
                 Videos
               </Link>
               <Link
+                href="/battle"
+                className="text-sm font-semibold text-canvas-soft/70 hover:text-primary transition-colors"
+              >
+                Battle
+              </Link>
+              <Link
                 href="/notes"
                 className="text-sm font-semibold text-canvas-soft/70 hover:text-primary transition-colors"
               >
@@ -210,6 +216,9 @@ export default function NavBar() {
               <>
                 <NavDrawerLink href="/videos" active={pathname.startsWith("/videos") || pathname.startsWith("/video")}>
                   Videos
+                </NavDrawerLink>
+                <NavDrawerLink href="/battle" active={pathname.startsWith("/battle")}>
+                  Battle
                 </NavDrawerLink>
                 <NavDrawerLink href="/notes" active={pathname.startsWith("/notes")}>
                   Notes
