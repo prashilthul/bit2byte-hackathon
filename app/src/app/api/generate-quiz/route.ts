@@ -5,7 +5,7 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY || "" })
 
 export async function POST(req: NextRequest) {
   if (!process.env.GROQ_API_KEY) {
-    return NextResponse.json({ questions: [] })
+    return NextResponse.json({ questions: [], error: "GROQ_API_KEY is not set. Add it to your .env file." })
   }
 
   try {
@@ -33,11 +33,20 @@ Return ONLY the JSON array, no other text.`
     })
 
     const text = completion.choices[0]?.message?.content?.trim() || ""
-    const jsonMatch = text.match(/\[[\s\S]*\]/)
-    const questions = jsonMatch ? JSON.parse(jsonMatch[0]).slice(0, count) : []
+    if (!text) {
+      return NextResponse.json({ questions: [], error: "Groq returned an empty response. Check your API key and quota." })
+    }
 
+    const jsonMatch = text.match(/\[[\s\S]*\]/)
+    if (!jsonMatch) {
+      const snippet = text.slice(0, 200)
+      return NextResponse.json({ questions: [], error: `Failed to parse JSON from Groq response. Response started with: "${snippet}"` })
+    }
+
+    const questions = JSON.parse(jsonMatch[0]).slice(0, count)
     return NextResponse.json({ questions })
-  } catch {
-    return NextResponse.json({ questions: [] })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error"
+    return NextResponse.json({ questions: [], error: `Groq API error: ${message}` })
   }
 }

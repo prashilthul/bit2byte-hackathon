@@ -220,6 +220,21 @@ body {
 iframe.goog-te-menu-frame {
   display: none !important;
 }
+.goog-te-gadget-simple,
+.goog-te-gadget-icon,
+.goog-te-menu-value,
+.goog-te-menu2,
+.goog-te-menu2-item {
+  display: none !important;
+}
+/* Hide the "Original text / Rate this translation" overlay */
+.skiptranslate > iframe:first-child {
+  display: none !important;
+}
+.goog-text-highlight {
+  background: none !important;
+  box-shadow: none !important;
+}
 
 /* ─── Responsive helpers ─── */
 @media (max-width: 767px) {

@@ -48,6 +48,7 @@ export default function QuizPage() {
   const autoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const answeredRef = useRef(false)
   const currentIdxRef = useRef(0)
+  const advancingRef = useRef(false)
 
   // Keep refs in sync with state
   useEffect(() => { answeredRef.current = answered }, [answered])
@@ -94,8 +95,10 @@ export default function QuizPage() {
   }, [answered, quiz, currentIndex])
 
   const goNext = useCallback(() => {
+    if (advancingRef.current) return
+    advancingRef.current = true
     if (autoTimerRef.current) { clearTimeout(autoTimerRef.current); autoTimerRef.current = null }
-    if (!quiz) return
+    if (!quiz) { advancingRef.current = false; return }
     if (currentIndex < total - 1) {
       setCurrentIndex((i) => i + 1)
       setSelected(null)
@@ -104,6 +107,7 @@ export default function QuizPage() {
     } else {
       setFinished(true)
     }
+    setTimeout(() => { advancingRef.current = false }, 300)
   }, [currentIndex, total, quiz])
 
   // Auto-advance after selecting an answer
@@ -250,9 +254,9 @@ export default function QuizPage() {
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
             <Button variant="secondary" onClick={() => { setCurrentIndex(0); setSelected(null); setAnswered(false); setResults([]); setFinished(false) }}
-              className="bg-surface-elevated text-canvas-soft hover:bg-surface-card cursor-pointer">Retry</Button>
+              className="bg-surface-elevated text-canvas-soft hover:bg-surface-card cursor-pointer w-full">Retry</Button>
             <Button variant="primary" onClick={handleSubmit} disabled={submitting} className="cursor-pointer">
-              {submitting ? "Saving..." : "Save &amp; Finish"}
+              {submitting ? "Saving..." : "Save & Finish"}
             </Button>
           </div>
         </div>

@@ -80,6 +80,7 @@ export default function VideoPlayerPage() {
   const [completed, setCompleted] = useState(false)
   const [focusScore, setFocusScore] = useState(100)
   const [checkpointCount, setCheckpointCount] = useState(0)
+  const [aiError, setAiError] = useState("")
 
   useEffect(() => {
     if (authLoading) return
@@ -104,6 +105,7 @@ export default function VideoPlayerPage() {
 
   // Pre-generate all AI questions from Groq when lesson starts
   const pregenerateAll = useCallback(async () => {
+    setAiError("")
     const promises = lesson.checkpoints.map(async (time) => {
       try {
         const res = await fetch("/api/generate-quiz", {
@@ -114,9 +116,12 @@ export default function VideoPlayerPage() {
         const data = await res.json()
         if (data.questions?.length > 0) {
           pregeneratedRef.current.set(time, data.questions)
+        } else if (data.error) {
+          setAiError(data.error)
         }
-      } catch {
-        // Question generation failed — checkpoint will show fallback text
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Network error"
+        setAiError(`Failed to reach API: ${msg}`)
       }
     })
     Promise.all(promises)
@@ -299,7 +304,9 @@ export default function VideoPlayerPage() {
                 {activeQuiz.length === 0 ? (
                   <div className="text-center py-8">
                     <Brain className="w-10 h-10 mx-auto mb-3 text-canvas-soft/20" />
-                    <p className="text-body-sm text-canvas-soft/40 mb-4">No AI questions available. Add a <strong>GROQ_API_KEY</strong> to your .env to generate questions from the transcript.</p>
+                    <p className="text-body-sm text-canvas-soft/40 mb-4 whitespace-pre-wrap break-words">
+                      {aiError || "AI questions could not be generated."}
+                    </p>
                     <button onClick={() => { setShowQuiz(false); setPlaying(true); videoRef.current?.play() }}
                       className="text-sm font-semibold text-primary hover:underline cursor-pointer">Continue watching</button>
                   </div>

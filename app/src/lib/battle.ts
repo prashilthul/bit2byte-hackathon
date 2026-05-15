@@ -15,6 +15,8 @@ export interface BattlePlayer {
   uid: string
   name: string
   score: number
+  currentQ: number
+  finished: boolean
   answers: { qIdx: number; answer: number; timeMs: number; correct: boolean }[]
   lastAnswerMs: number
 }
@@ -23,9 +25,8 @@ export interface BattleRoom {
   code: string
   status: "waiting" | "playing" | "finished"
   hostId: string
-  currentQ: number
   questions: { q: string; options: string[]; answer: number }[]
-  questionStartMs: number
+  finishedCount: number
   createdAt: number
 }
 
@@ -43,7 +44,6 @@ export function generateRoomCode(): string {
 
 export async function createRoom(hostId: string, hostName: string): Promise<string> {
   let code = generateRoomCode()
-  // Ensure uniqueness
   for (let attempt = 0; attempt < 5; attempt++) {
     const existing = await getDoc(doc(getDb(), "rooms", code))
     if (!existing.exists()) break
@@ -67,20 +67,20 @@ export async function createRoom(hostId: string, hostName: string): Promise<stri
     code,
     status: "waiting",
     hostId,
-    currentQ: 0,
     questions,
-    questionStartMs: 0,
+    finishedCount: 0,
     createdAt: Date.now(),
   }
 
   await setDoc(doc(getDb(), "rooms", code), room)
 
-  // Add host as player
   const playerRef = doc(getDb(), "rooms", code, "players", hostId)
   await setDoc(playerRef, {
     uid: hostId,
     name: hostName,
     score: 0,
+    currentQ: 0,
+    finished: false,
     answers: [],
     lastAnswerMs: 0,
   })
@@ -91,7 +91,6 @@ export async function createRoom(hostId: string, hostName: string): Promise<stri
 export async function joinRoom(code: string, uid: string, name: string): Promise<boolean> {
   const roomDoc = await getDoc(doc(getDb(), "rooms", code.toUpperCase()))
   if (!roomDoc.exists()) return false
-
   const room = roomDoc.data() as BattleRoom
   if (room.status !== "waiting") return false
 
@@ -100,6 +99,8 @@ export async function joinRoom(code: string, uid: string, name: string): Promise
     uid,
     name,
     score: 0,
+    currentQ: 0,
+    finished: false,
     answers: [],
     lastAnswerMs: 0,
   })
@@ -108,11 +109,22 @@ export async function joinRoom(code: string, uid: string, name: string): Promise
 }
 
 export async function startBattle(code: string) {
-  const now = Date.now()
+  // Reset all players
+  const playersSnap = await getDocs(collection(getDb(), "rooms", code, "players"))
+  const resetPromises = playersSnap.docs.map((p) =>
+    updateDoc(doc(getDb(), "rooms", code, "players", p.id), {
+      currentQ: 0,
+      finished: false,
+      score: 0,
+      answers: [],
+      lastAnswerMs: 0,
+    })
+  )
+  await Promise.all(resetPromises)
+
   await updateDoc(doc(getDb(), "rooms", code), {
     status: "playing",
-    currentQ: 0,
-    questionStartMs: now,
+    finishedCount: 0,
   })
 }
 
@@ -122,7 +134,8 @@ export async function submitAnswer(
   qIdx: number,
   answer: number,
   timeMs: number,
-  correct: boolean
+  correct: boolean,
+  totalQuestions: number
 ) {
   const basePoints = correct ? 500 : 0
   const timeBonus = correct ? Math.max(0, 1000 - Math.floor(timeMs / 15)) : 0
@@ -132,22 +145,30 @@ export async function submitAnswer(
   const playerDoc = await getDoc(playerRef)
   const player = playerDoc.data() as BattlePlayer | undefined
   const newScore = (player?.score || 0) + pointGain
+  const nextQ = qIdx + 1
+  const isFinished = nextQ >= totalQuestions
 
   await updateDoc(playerRef, {
     score: newScore,
+    currentQ: nextQ,
+    finished: isFinished,
     lastAnswerMs: Date.now(),
     answers: [...(player?.answers || []), { qIdx, answer, timeMs, correct }],
   })
-}
 
-export async function goToNextQuestion(code: string, nextQ: number, total: number) {
-  if (nextQ >= total) {
-    await updateDoc(doc(getDb(), "rooms", code), { status: "finished" })
-  } else {
-    await updateDoc(doc(getDb(), "rooms", code), {
-      currentQ: nextQ,
-      questionStartMs: Date.now(),
-    })
+  // If this player finished, increment room's finishedCount
+  if (isFinished) {
+    const roomRef = doc(getDb(), "rooms", code)
+    const roomDoc = await getDoc(roomRef)
+    const room = roomDoc.data() as BattleRoom
+    const newFinished = (room.finishedCount || 0) + 1
+    const totalPlayers = (await getDocs(collection(getDb(), "rooms", code, "players"))).docs.length
+
+    if (newFinished >= totalPlayers) {
+      await updateDoc(roomRef, { status: "finished", finishedCount: newFinished })
+    } else {
+      await updateDoc(roomRef, { finishedCount: newFinished })
+    }
   }
 }
 
@@ -157,10 +178,7 @@ export function subscribeRoom(code: string, cb: (room: BattleRoom | null) => voi
   })
 }
 
-export function subscribePlayers(
-  code: string,
-  cb: (players: BattlePlayer[]) => void
-): Unsubscribe {
+export function subscribePlayers(code: string, cb: (players: BattlePlayer[]) => void): Unsubscribe {
   return onSnapshot(collection(getDb(), "rooms", code, "players"), (snap) => {
     const players = snap.docs.map((d) => d.data() as BattlePlayer)
     players.sort((a, b) => b.score - a.score)
@@ -204,8 +222,8 @@ export function calculateRatingDelta(
   const rank = sorted.indexOf(myScore)
   const total = sorted.length
 
-  if (rank === 0) return +25  // 1st
-  if (rank === 1) return +12  // 2nd
+  if (rank === 0) return +25
+  if (rank === 1) return +12
   if (rank <= Math.ceil(total / 2)) return +5
   if (rank === total - 1) return -10
   return -5

@@ -1,6 +1,7 @@
 "use client"
+/* eslint-disable react-hooks/set-state-in-effect */
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, useCallback } from "react"
 import { gsap } from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { useAuth } from "@/context/AuthContext"
@@ -424,36 +425,51 @@ function DashboardStats({ uid }: { uid?: string | null }) {
   const [flashcardRating, setFlashcardRating] = useState(0)
   const [loading, setLoading] = useState(true)
 
+  const refresh = useCallback(async (u: string) => {
+    try {
+      const [battleHist, , br, fr, quizSnap] = await Promise.all([
+        getRatingHistory(u, "battle"),
+        getRatingHistory(u, "flashcards"),
+        getRating(u, "battle"),
+        getRating(u, "flashcards"),
+        getDocs(
+          query(
+            collection(db!, "quizResults"),
+            where("uid", "==", u),
+            orderBy("completedAt", "desc"),
+            limit(20)
+          )
+        ),
+      ])
+      setRatingData(battleHist.map((r) => ({ rating: r.rating, timestamp: r.timestamp })))
+      setQuizData(quizSnap.docs.map((d) => d.data() as QuizResult).reverse())
+      setBattleRating(br)
+      setFlashcardRating(fr)
+    } catch {} finally {
+      setLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     if (!uid) return
-    const load = async () => {
-      try {
-        const [battleHist, , br, fr, quizSnap] = await Promise.all([
-          getRatingHistory(uid, "battle"),
-          getRatingHistory(uid, "flashcards"),
-          getRating(uid, "battle"),
-          getRating(uid, "flashcards"),
-          getDocs(
-            query(
-              collection(db!, "quizResults"),
-              where("uid", "==", uid),
-              orderBy("completedAt", "desc"),
-              limit(20)
-            )
-          ),
-        ])
-        setRatingData(battleHist.map((r) => ({ rating: r.rating, timestamp: r.timestamp })))
-        setQuizData(quizSnap.docs.map((d) => d.data() as QuizResult).reverse())
-        setBattleRating(br)
-        setFlashcardRating(fr)
-      } catch {} finally {
-        setLoading(false)
-      }
+    refresh(uid)
+
+    // Refresh on visibility change (user returns from quiz/battle)
+    const onVisible = () => { if (document.visibilityState === "visible") refresh(uid) }
+    document.addEventListener("visibilitychange", onVisible)
+
+    // Poll every 15s as a fallback
+    const interval = setInterval(() => refresh(uid), 15000)
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible)
+      clearInterval(interval)
     }
-    load()
-  }, [uid])
+  }, [uid, refresh])
 
   if (loading && uid) return null
+  const hasNoData = battleRating === 1000 && flashcardRating === 1000 && quizData.length === 0 && ratingData.length === 0
+  if (hasNoData && !loading) return null
 
   const ratingOption = {
     tooltip: { trigger: "axis" as const, theme: "dark" },
@@ -512,22 +528,6 @@ function DashboardStats({ uid }: { uid?: string | null }) {
             <p className="text-caption text-canvas-soft/30 uppercase tracking-wider mt-0.5">Battles</p>
           </div>
         </div>
-        <div className="rounded-xl bg-surface-card border border-primary/5 p-4 text-center">
-          <BookOpen className="w-4 h-4 mx-auto mb-1.5" style={{ color: "#9fe870" }} />
-          <p className="text-display-xs font-black" style={{ color: "#9fe870" }}>{flashcardRating}</p>
-          <p className="text-caption text-canvas-soft/30 uppercase tracking-wider mt-0.5">Flashcards</p>
-        </div>
-        <div className="rounded-xl bg-surface-card border border-primary/5 p-4 text-center">
-          <Sparkles className="w-4 h-4 mx-auto mb-1.5 text-primary" />
-          <p className="text-display-xs text-primary font-black">{quizData.length}</p>
-          <p className="text-caption text-canvas-soft/30 uppercase tracking-wider mt-0.5">Quizzes</p>
-        </div>
-        <div className="rounded-xl bg-surface-card border border-primary/5 p-4 text-center">
-          <Trophy className="w-4 h-4 mx-auto mb-1.5 text-primary" />
-          <p className="text-display-xs text-primary font-black">{ratingData.length}</p>
-          <p className="text-caption text-canvas-soft/30 uppercase tracking-wider mt-0.5">Battles</p>
-        </div>
-      </div>
 
       <div className="grid md:grid-cols-2 gap-4">
         {ratingData.length > 0 && (
