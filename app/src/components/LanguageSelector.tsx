@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client"
 
 import { useEffect, useState, useRef } from "react"
@@ -19,50 +20,35 @@ const LANGUAGES = [
   { code: "fr", label: "French", native: "Français" },
 ]
 
+const GOOGLE_LANG_MAP: Record<string, string> = {
+  en: "en", hi: "hi", bn: "bn", te: "te", mr: "mr", ta: "ta",
+  ur: "ur", gu: "gu", kn: "kn", ml: "ml", pa: "pa",
+  es: "es", fr: "fr",
+}
+
+function setCookie(name: string, value: string, days?: number) {
+  if (typeof document === "undefined") return
+  let cookie = `${name}=${value}; path=/`
+  if (days) {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString()
+    cookie += `; expires=${expires}`
+  }
+  document.cookie = cookie
+}
+
+function detectLang(): string {
+  if (typeof document === "undefined") return "en"
+  const match = document.cookie.match(/googtrans=.*\/([a-z]{2})/)
+  return match ? match[1] : "en"
+}
+
 export default function LanguageSelector() {
   const [open, setOpen] = useState(false)
   const [current, setCurrent] = useState("en")
-  const [ready, setReady] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const selectRef = useRef<HTMLSelectElement | null>(null)
 
-  // Initialize Google Translate on mount
   useEffect(() => {
-    const init = () => {
-      if (typeof window === "undefined" || typeof google === "undefined" || !google.translate) {
-        setTimeout(init, 500)
-        return
-      }
-      try {
-        new google.translate.TranslateElement(
-          { pageLanguage: "en", includedLanguages: "en,hi,bn,te,mr,ta,ur,gu,kn,ml,pa,es,fr", autoDisplay: false },
-          "google_translate_element"
-        )
-        // Poll for the select element to appear
-        const poll = setInterval(() => {
-          const sel = document.querySelector(".goog-te-combo") as HTMLSelectElement | null
-          if (sel) {
-            selectRef.current = sel
-            clearInterval(poll)
-            setReady(true)
-          }
-        }, 200)
-      } catch {
-        setTimeout(init, 1000)
-      }
-    }
-
-    // Load script if not already loaded
-    if (!document.getElementById("gt-script")) {
-      const script = document.createElement("script")
-      script.id = "gt-script"
-      script.src = "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
-      // Define the global callback
-      ;(window as any).googleTranslateElementInit = init
-      document.head.appendChild(script)
-    } else if (typeof google !== "undefined" && google.translate) {
-      init()
-    }
+    setCurrent(detectLang())
   }, [])
 
   useEffect(() => {
@@ -79,25 +65,40 @@ export default function LanguageSelector() {
     setCurrent(langCode)
     setOpen(false)
 
-    const select = selectRef.current || (document.querySelector(".goog-te-combo") as HTMLSelectElement | null)
-    if (!select) return
-
     if (langCode === "en") {
-      select.value = ""
-      select.dispatchEvent(new Event("change"))
-      return
+      setCookie("googtrans", "", -1)
+    } else {
+      const gtCode = GOOGLE_LANG_MAP[langCode] || langCode
+      setCookie("googtrans", `/en/${gtCode}`)
     }
 
-    const googleLangMap: Record<string, string> = {
-      hi: "hi", bn: "bn", te: "te", mr: "mr", ta: "ta",
-      ur: "ur", gu: "gu", kn: "kn", ml: "ml", pa: "pa",
-      es: "es", fr: "fr",
-    }
-    select.value = googleLangMap[langCode] || langCode
-    select.dispatchEvent(new Event("change"))
+    window.location.reload()
   }
 
   const currentLang = LANGUAGES.find((l) => l.code === current) || LANGUAGES[0]
+
+  useEffect(() => {
+    const hasGoogle = typeof (window as unknown as Record<string, unknown>).google !== "undefined"
+    if (document.getElementById("gt-script") || hasGoogle) return
+
+    const script = document.createElement("script")
+    script.id = "gt-script"
+    script.src = "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
+
+    const w = window as unknown as Record<string, unknown>
+    w.googleTranslateElementInit = () => {
+      const g = (window as unknown as Record<string, unknown>).google as {
+        translate: { TranslateElement: new (config: Record<string, unknown>, id: string) => void }
+      }
+      if (g?.translate) {
+        new g.translate.TranslateElement(
+          { pageLanguage: "en", includedLanguages: Object.keys(GOOGLE_LANG_MAP).join(","), autoDisplay: false },
+          "google_translate_element"
+        )
+      }
+    }
+    document.head.appendChild(script)
+  }, [])
 
   return (
     <div ref={dropdownRef} className="relative">

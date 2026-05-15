@@ -490,11 +490,27 @@ function DashboardStats({ uid }: { uid?: string | null }) {
         <h2 className="text-display-xs text-canvas-soft">Your Stats</h2>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-        <div className="rounded-xl bg-surface-card border border-primary/5 p-4 text-center">
-          <Swords className="w-4 h-4 mx-auto mb-1.5" style={{ color: "#ff6b9d" }} />
-          <p className="text-display-xs font-black" style={{ color: "#ff6b9d" }}>{battleRating}</p>
-          <p className="text-caption text-canvas-soft/30 uppercase tracking-wider mt-0.5">Battle</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          <div className="rounded-xl bg-surface-card border border-primary/5 p-4 text-center">
+            <Swords className="w-4 h-4 mx-auto mb-1.5" style={{ color: "#ff6b9d" }} />
+            <p className="text-display-xs font-black" style={{ color: "#ff6b9d" }}>{battleRating}</p>
+            <p className="text-caption text-canvas-soft/30 uppercase tracking-wider mt-0.5">Battle</p>
+          </div>
+          <div className="rounded-xl bg-surface-card border border-primary/5 p-4 text-center">
+            <BookOpen className="w-4 h-4 mx-auto mb-1.5" style={{ color: "#38c8ff" }} />
+            <p className="text-display-xs font-black" style={{ color: "#38c8ff" }}>{flashcardRating}</p>
+            <p className="text-caption text-canvas-soft/30 uppercase tracking-wider mt-0.5">Flashcards</p>
+          </div>
+          <div className="rounded-xl bg-surface-card border border-primary/5 p-4 text-center">
+            <Sparkles className="w-4 h-4 mx-auto mb-1.5" style={{ color: "#9fe870" }} />
+            <p className="text-display-xs font-black" style={{ color: "#9fe870" }}>{quizData.length}</p>
+            <p className="text-caption text-canvas-soft/30 uppercase tracking-wider mt-0.5">Quizzes</p>
+          </div>
+          <div className="rounded-xl bg-surface-card border border-primary/5 p-4 text-center">
+            <Trophy className="w-4 h-4 mx-auto mb-1.5" style={{ color: "#ffd11a" }} />
+            <p className="text-display-xs font-black" style={{ color: "#ffd11a" }}>{ratingData.length}</p>
+            <p className="text-caption text-canvas-soft/30 uppercase tracking-wider mt-0.5">Battles</p>
+          </div>
         </div>
         <div className="rounded-xl bg-surface-card border border-primary/5 p-4 text-center">
           <BookOpen className="w-4 h-4 mx-auto mb-1.5" style={{ color: "#9fe870" }} />
