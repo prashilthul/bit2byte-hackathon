@@ -8,6 +8,7 @@ import { useAuth } from "@/context/AuthContext"
 import { auth } from "@/lib/firebase"
 import { signOut } from "firebase/auth"
 import { X } from "lucide-react"
+import LanguageSelector from "@/components/LanguageSelector"
 
 function getAuth() {
   if (!auth) throw new Error("Auth not initialized")
@@ -93,8 +94,8 @@ export default function NavBar() {
 
         {/* Right side */}
         <div className="flex items-center gap-3">
-          {/* Google Translate */}
-          <div id="google_translate_element" className="scale-75 md:scale-90 origin-right" />
+          {/* Language Selector */}
+          <LanguageSelector />
 
           {user ? (
             <div className="hidden md:flex items-center gap-4">

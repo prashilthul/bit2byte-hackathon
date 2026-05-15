@@ -3,6 +3,7 @@ import {
   doc,
   setDoc,
   getDoc,
+  getDocs,
   updateDoc,
   deleteDoc,
   collection,
@@ -171,12 +172,27 @@ export async function deleteRoom(code: string) {
   await deleteDoc(doc(getDb(), "rooms", code))
 }
 
-export async function updateRating(uid: string, ratingDelta: number) {
-  const userRef = doc(getDb(), "users", uid)
-  const userDoc = await getDoc(userRef)
-  const currentRating = userDoc.data()?.rating || 1000
-  const newRating = Math.max(0, currentRating + ratingDelta)
-  await updateDoc(userRef, { rating: newRating })
+export async function updateRating(uid: string, category: string, delta: number) {
+  const ref = doc(getDb(), "users", uid, "ratings", category)
+  const existing = await getDoc(ref)
+  const current = existing.data()?.rating ?? 1000
+  const newRating = Math.max(0, current + delta)
+  await setDoc(ref, { rating: newRating, updatedAt: Date.now() })
+
+  const historyRef = doc(collection(getDb(), "users", uid, "ratings", category, "history"))
+  await setDoc(historyRef, { rating: newRating, delta, timestamp: Date.now() })
+}
+
+export async function getRating(uid: string, category: string): Promise<number> {
+  const ref = doc(getDb(), "users", uid, "ratings", category)
+  const snap = await getDoc(ref)
+  return snap.data()?.rating ?? 1000
+}
+
+export async function getRatingHistory(uid: string, category: string): Promise<{ rating: number; delta: number; timestamp: number }[]> {
+  const snap = await getDocs(collection(getDb(), "users", uid, "ratings", category, "history"))
+  return snap.docs.map((d) => d.data() as { rating: number; delta: number; timestamp: number })
+    .sort((a, b) => a.timestamp - b.timestamp)
 }
 
 export function calculateRatingDelta(

@@ -4,7 +4,7 @@ import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
 import Link from "next/link"
-import { Swords, Sparkles, ChevronRight, Gamepad2 } from "lucide-react"
+import { Swords, Sparkles, ChevronRight, Gamepad2, BookOpen } from "lucide-react"
 
 const GAMES = [
   {
@@ -15,6 +15,15 @@ const GAMES = [
     color: "#ff6b9d",
     players: "2+ players",
     href: "/games/battle",
+  },
+  {
+    id: "flashcards",
+    title: "Flash Cards",
+    description: "Flip through STEM flashcards. Choose a subject, test your knowledge, and track your accuracy across decks.",
+    icon: BookOpen,
+    color: "#9fe870",
+    players: "Solo practice",
+    href: "/games/flashcards",
   },
 ]
 

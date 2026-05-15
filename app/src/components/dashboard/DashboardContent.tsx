@@ -5,9 +5,18 @@ import { gsap } from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { useAuth } from "@/context/AuthContext"
 import { getSubjectsByGrade } from "@/lib/firestore"
+import { getRatingHistory, getRating } from "@/lib/battle"
+import { collection, query, where, orderBy, limit, getDocs } from "firebase/firestore"
+import { db } from "@/lib/firebase"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/context/ToastContext"
+import ReactEChartsCore from "echarts-for-react/lib/core"
+import * as echarts from "echarts/core"
+import { LineChart, BarChart } from "echarts/charts"
+import { GridComponent, TooltipComponent } from "echarts/components"
+import { CanvasRenderer } from "echarts/renderers"
+echarts.use([LineChart, BarChart, GridComponent, TooltipComponent, CanvasRenderer])
 import {
   Calculator,
   FlaskConical,
@@ -18,6 +27,8 @@ import {
   Trophy,
   Sparkles,
   ArrowUpRight,
+  TrendingUp,
+  Swords,
 } from "lucide-react"
 
 gsap.registerPlugin(ScrollTrigger)
@@ -163,6 +174,7 @@ function DashboardScene(props: {
   grade: number
 }) {
   const { subjects, loading, userData, quizzesDone, xp, grade } = props
+  const { user } = useAuth()
   const headerRef = useRef<HTMLDivElement>(null)
   const gridRef = useRef<HTMLDivElement>(null)
   const statsRef = useRef<HTMLDivElement>(null)
@@ -389,6 +401,133 @@ function DashboardScene(props: {
             <p className="text-caption text-canvas-soft/15 tracking-wider uppercase">
               Scroll to explore all subjects
             </p>
+          </div>
+        )}
+
+        {/* ─── Stats Section ─── */}
+        <DashboardStats uid={user!.uid} />
+      </div>
+    </div>
+  )
+}
+
+interface QuizResult {
+  score: number
+  total: number
+  completedAt: { toMillis: () => number } | number
+}
+
+function DashboardStats({ uid }: { uid?: string | null }) {
+  const [ratingData, setRatingData] = useState<{ rating: number; timestamp: number }[]>([])
+  const [quizData, setQuizData] = useState<QuizResult[]>([])
+  const [battleRating, setBattleRating] = useState(0)
+  const [flashcardRating, setFlashcardRating] = useState(0)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!uid) return
+    const load = async () => {
+      try {
+        const [battleHist, , br, fr, quizSnap] = await Promise.all([
+          getRatingHistory(uid, "battle"),
+          getRatingHistory(uid, "flashcards"),
+          getRating(uid, "battle"),
+          getRating(uid, "flashcards"),
+          getDocs(
+            query(
+              collection(db!, "quizResults"),
+              where("uid", "==", uid),
+              orderBy("completedAt", "desc"),
+              limit(20)
+            )
+          ),
+        ])
+        setRatingData(battleHist.map((r) => ({ rating: r.rating, timestamp: r.timestamp })))
+        setQuizData(quizSnap.docs.map((d) => d.data() as QuizResult).reverse())
+        setBattleRating(br)
+        setFlashcardRating(fr)
+      } catch {} finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [uid])
+
+  if (loading && uid) return null
+
+  const ratingOption = {
+    tooltip: { trigger: "axis" as const, theme: "dark" },
+    grid: { left: "3%", right: "4%", bottom: "3%", top: "8%", containLabel: true },
+    xAxis: { type: "category" as const, data: ratingData.map((r) => new Date(r.timestamp).toLocaleDateString()), axisLabel: { color: "#868685", fontSize: 10 } },
+    yAxis: { type: "value" as const, splitLine: { lineStyle: { color: "#ffffff10" } }, axisLabel: { color: "#868685" } },
+    series: [{
+      data: ratingData.map((r) => r.rating),
+      type: "line" as const,
+      smooth: true,
+      lineStyle: { color: "#9fe870", width: 2 },
+      areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: "#9fe87040" }, { offset: 1, color: "#9fe87005" }]) },
+      symbol: "circle", symbolSize: 6, itemStyle: { color: "#9fe870" },
+    }],
+  }
+
+  const quizOption = {
+    tooltip: { trigger: "axis" as const, theme: "dark" },
+    grid: { left: "3%", right: "4%", bottom: "3%", top: "8%", containLabel: true },
+    xAxis: { type: "category" as const, data: quizData.map(() => ""), axisLabel: { color: "#868685", fontSize: 10 } },
+    yAxis: { type: "value" as const, max: 100, splitLine: { lineStyle: { color: "#ffffff10" } }, axisLabel: { color: "#868685", formatter: "{value}%" } },
+    series: [{
+      data: quizData.map((q) => Math.round((q.score / q.total) * 100)),
+      type: "bar" as const,
+      barWidth: "60%",
+      itemStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: "#38c8ff" }, { offset: 1, color: "#38c8ff30" }]), borderRadius: [4, 4, 0, 0] },
+    }],
+  }
+
+  return (
+    <div className="mt-16 md:mt-20 space-y-6">
+      <div className="flex items-center gap-2">
+        <TrendingUp className="w-5 h-5 text-primary" />
+        <h2 className="text-display-xs text-canvas-soft">Your Stats</h2>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <div className="rounded-xl bg-surface-card border border-primary/5 p-4 text-center">
+          <Swords className="w-4 h-4 mx-auto mb-1.5" style={{ color: "#ff6b9d" }} />
+          <p className="text-display-xs font-black" style={{ color: "#ff6b9d" }}>{battleRating}</p>
+          <p className="text-caption text-canvas-soft/30 uppercase tracking-wider mt-0.5">Battle</p>
+        </div>
+        <div className="rounded-xl bg-surface-card border border-primary/5 p-4 text-center">
+          <BookOpen className="w-4 h-4 mx-auto mb-1.5" style={{ color: "#9fe870" }} />
+          <p className="text-display-xs font-black" style={{ color: "#9fe870" }}>{flashcardRating}</p>
+          <p className="text-caption text-canvas-soft/30 uppercase tracking-wider mt-0.5">Flashcards</p>
+        </div>
+        <div className="rounded-xl bg-surface-card border border-primary/5 p-4 text-center">
+          <Sparkles className="w-4 h-4 mx-auto mb-1.5 text-primary" />
+          <p className="text-display-xs text-primary font-black">{quizData.length}</p>
+          <p className="text-caption text-canvas-soft/30 uppercase tracking-wider mt-0.5">Quizzes</p>
+        </div>
+        <div className="rounded-xl bg-surface-card border border-primary/5 p-4 text-center">
+          <Trophy className="w-4 h-4 mx-auto mb-1.5 text-primary" />
+          <p className="text-display-xs text-primary font-black">{ratingData.length}</p>
+          <p className="text-caption text-canvas-soft/30 uppercase tracking-wider mt-0.5">Battles</p>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        {ratingData.length > 0 && (
+          <div className="rounded-2xl bg-surface-card border border-primary/5 p-5">
+            <h3 className="text-body-sm-strong text-canvas-soft mb-3 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" style={{ color: "#ff6b9d" }} /> Battle Rating
+            </h3>
+            <ReactEChartsCore echarts={echarts} option={ratingOption} style={{ height: 200 }} notMerge />
+          </div>
+        )}
+        {quizData.length > 0 && (
+          <div className="rounded-2xl bg-surface-card border border-primary/5 p-5">
+            <h3 className="text-body-sm-strong text-canvas-soft mb-3 flex items-center gap-2">
+              <Trophy className="w-4 h-4 text-primary" /> Quiz Scores
+            </h3>
+            <ReactEChartsCore echarts={echarts} option={quizOption} style={{ height: 200 }} notMerge />
           </div>
         )}
       </div>

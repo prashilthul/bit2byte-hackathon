@@ -193,7 +193,32 @@ body {
   top: 0px !important;
 }
 #google_translate_element {
-  display: inline-block;
+  display: none;
+}
+.goog-te-combo {
+  appearance: none;
+  background: transparent;
+  border: none;
+  color: transparent;
+  width: 0;
+  height: 0;
+  position: absolute;
+  pointer-events: none;
+}
+.goog-logo-link {
+  display: none !important;
+}
+.goog-te-gadget {
+  font-size: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+.VIpgJd-ZVi9od-l4eHX-hSRGPd,
+.VIpgJd-ZVi9od-ORHb-OEVmcd {
+  display: none !important;
+}
+iframe.goog-te-menu-frame {
+  display: none !important;
 }
 
 /* ─── Responsive helpers ─── */

@@ -125,7 +125,7 @@ export default function BattlePage() {
     setRatingDelta(delta)
     setResultPlayers([...players])
 
-    await updateRating(user!.uid, delta)
+    await updateRating(user!.uid, "battle", delta)
 
     setTimeout(() => deleteRoom(code), 60000)
   }, [players, code, user])
